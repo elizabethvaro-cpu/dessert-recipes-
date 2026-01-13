@@ -1,21 +1,25 @@
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Colors } from '../theme/colors';
-import type { MealSummary } from '../types/meals';
 
 type Props = {
-  meal: MealSummary;
+  title: string;
+  imageUrl?: string;
   subtitle?: string;
   description?: string;
   onPress: () => void;
 };
 
-export function RecipeCard({ meal, subtitle, description, onPress }: Props) {
+export function RecipeCard({ title, imageUrl, subtitle, description, onPress }: Props) {
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
-      <Image source={{ uri: meal.strMealThumb }} style={styles.image} />
+      {imageUrl ? (
+        <Image source={{ uri: imageUrl }} style={styles.image} />
+      ) : (
+        <View style={[styles.image, styles.imageFallback]} />
+      )}
       <View style={styles.content}>
         <Text style={styles.title} numberOfLines={2}>
-          {meal.strMeal}
+          {title}
         </Text>
         {!!subtitle && (
           <Text style={styles.subtitle} numberOfLines={1}>
@@ -48,6 +52,9 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 180,
     backgroundColor: Colors.cream,
+  },
+  imageFallback: {
+    backgroundColor: Colors.border,
   },
   content: {
     paddingHorizontal: 12,

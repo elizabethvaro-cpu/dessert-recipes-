@@ -2,14 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { LoadingSpinner } from '../../src/components/LoadingSpinner';
-import { fetchAreas } from '../../src/services/api';
+import { fetchCountries, type Country } from '../../src/services/countries';
 import { Colors } from '../../src/theme/colors';
-import { flagForArea } from '../../src/utils/flags';
 
 type LoadState =
   | { status: 'loading' }
   | { status: 'error'; message: string }
-  | { status: 'ready'; areas: string[] };
+  | { status: 'ready'; countries: Country[] };
 
 export default function CountriesScreen() {
   const router = useRouter();
@@ -21,10 +20,10 @@ export default function CountriesScreen() {
     let cancelled = false;
     setState({ status: 'loading' });
     (async () => {
-      const res = await fetchAreas();
+      const res = await fetchCountries();
       if (cancelled) return;
       if (!res.ok) setState({ status: 'error', message: res.error });
-      else setState({ status: 'ready', areas: res.data });
+      else setState({ status: 'ready', countries: res.data });
     })();
     return () => {
       cancelled = true;
@@ -34,17 +33,17 @@ export default function CountriesScreen() {
   const filtered = useMemo(() => {
     if (state.status !== 'ready') return [];
     const q = query.trim().toLowerCase();
-    if (!q) return state.areas;
-    return state.areas.filter((a) => a.toLowerCase().includes(q));
+    if (!q) return state.countries;
+    return state.countries.filter((c) => c.name.toLowerCase().includes(q));
   }, [state, query]);
 
-  if (state.status === 'loading') return <LoadingSpinner label="Loading cuisines…" />;
+  if (state.status === 'loading') return <LoadingSpinner label="Loading countries…" />;
 
   if (state.status === 'error') {
     return (
       <View style={styles.center}>
-        <Text style={styles.title}>Search Cuisines</Text>
-        <Text style={styles.muted}>We couldn’t load cuisines.</Text>
+        <Text style={styles.title}>Explore Countries</Text>
+        <Text style={styles.muted}>We couldn’t load the country list.</Text>
         <Text style={styles.error}>{state.message}</Text>
         <Pressable onPress={() => setReloadKey((v) => v + 1)} style={styles.primaryButton}>
           <Text style={styles.primaryButtonText}>Try again</Text>
@@ -55,17 +54,17 @@ export default function CountriesScreen() {
 
   return (
     <View style={styles.container}>
-      <Stack.Screen options={{ title: 'Cuisines' }} />
+      <Stack.Screen options={{ title: 'Countries' }} />
 
-      <Text style={styles.headerTitle}>Search Cuisines</Text>
+      <Text style={styles.headerTitle}>Explore Countries</Text>
       <Text style={styles.headerHint}>
-        TheMealDB supports a limited set of cuisines/areas. Each one shows all available desserts.
+        Pick a country to see desserts. We combine multiple sources when possible.
       </Text>
 
       <TextInput
         value={query}
         onChangeText={setQuery}
-        placeholder="Search cuisines…"
+        placeholder="Search countries…"
         placeholderTextColor={Colors.mutedText}
         style={styles.search}
         autoCorrect={false}
@@ -74,16 +73,16 @@ export default function CountriesScreen() {
 
       <FlatList
         data={filtered}
-        keyExtractor={(item) => item}
+        keyExtractor={(item) => item.name}
         contentContainerStyle={styles.list}
         renderItem={({ item }) => (
           <Pressable
-            onPress={() => router.push(`/recipes?area=${encodeURIComponent(item)}`)}
+            onPress={() => router.push(`/recipes?country=${encodeURIComponent(item.name)}`)}
             style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
           >
-            <Text style={styles.flag}>{flagForArea(item)}</Text>
+            <Text style={styles.flag}>{item.flag || '🌍'}</Text>
             <Text style={styles.countryName} numberOfLines={1}>
-              {item}
+              {item.name}
             </Text>
           </Pressable>
         )}

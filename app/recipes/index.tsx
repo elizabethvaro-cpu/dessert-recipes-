@@ -1,71 +1,51 @@
 import { useEffect, useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import {
-  fetchDesserts,
-  fetchDessertsByArea,
-  fetchMealDetail,
-  getShortDescription,
-} from '../../src/services/api';
 import { LoadingSpinner } from '../../src/components/LoadingSpinner';
 import { RecipeCard } from '../../src/components/RecipeCard';
 import { Colors } from '../../src/theme/colors';
-import type { MealSummary } from '../../src/types/meals';
+import {
+  fetchDessertSummariesAll,
+  fetchDessertSummariesForArea,
+  fetchDessertSummariesForCountry,
+} from '../../src/services/recipes';
+import type { RecipeSummary } from '../../src/types/recipes';
 
 type LoadState =
   | { status: 'loading' }
   | { status: 'error'; message: string }
-  | { status: 'ready'; meals: MealSummary[] };
+  | { status: 'ready'; recipes: RecipeSummary[] };
 
 export default function RecipeListScreen() {
   const router = useRouter();
-  const { area } = useLocalSearchParams<{ area?: string }>();
+  const { country, area } = useLocalSearchParams<{ country?: string; area?: string }>();
+  const countryLabel = typeof country === 'string' && country.trim() ? country : undefined;
+  // Back-compat: "area" is treated as a country-like label (e.g. "Mexican", "Japanese").
   const areaLabel = typeof area === 'string' && area.trim() ? area : undefined;
+  const scopeLabel = countryLabel ?? areaLabel ?? undefined;
 
   const [state, setState] = useState<LoadState>({ status: 'loading' });
-  const [metaById, setMetaById] = useState<Record<string, { description?: string; area?: string }>>({});
   const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
     setState({ status: 'loading' });
-    setMetaById({});
     (async () => {
-      const res = areaLabel ? await fetchDessertsByArea(areaLabel) : await fetchDesserts();
+      const res = countryLabel
+        ? await fetchDessertSummariesForCountry(countryLabel)
+        : areaLabel
+          ? await fetchDessertSummariesForArea(areaLabel)
+          : await fetchDessertSummariesAll();
       if (cancelled) return;
       if (!res.ok) setState({ status: 'error', message: res.error });
-      else setState({ status: 'ready', meals: res.data });
+      else setState({ status: 'ready', recipes: res.data });
     })();
     return () => {
       cancelled = true;
     };
-  }, [areaLabel, reloadKey]);
+  }, [scopeLabel, reloadKey]);
 
-  // Optional UX enhancement: prefetch a handful of details to show short descriptions (when available)
-  // and to avoid a "blank" feel on the list screen.
-  useEffect(() => {
-    if (state.status !== 'ready') return;
-    let cancelled = false;
-    (async () => {
-      const first = state.meals.slice(0, 10);
-      await Promise.all(
-        first.map(async (m) => {
-          const detail = await fetchMealDetail(m.idMeal);
-          if (!detail.ok || cancelled) return;
-          const desc = getShortDescription(detail.data.strInstructions, 90);
-          setMetaById((prev) => ({
-            ...prev,
-            [m.idMeal]: { description: desc || undefined, area: detail.data.strArea ?? undefined },
-          }));
-        })
-      );
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [state]);
-
-  const title = useMemo(() => (areaLabel ? `${areaLabel} desserts` : 'All desserts'), [areaLabel]);
+  const title = useMemo(() => (scopeLabel ? `${scopeLabel} desserts` : 'All desserts'), [scopeLabel]);
 
   if (state.status === 'loading') return <LoadingSpinner label={`Loading ${title.toLowerCase()}…`} />;
 
@@ -92,18 +72,24 @@ export default function RecipeListScreen() {
     <View style={styles.container}>
       <Stack.Screen options={{ title }} />
       <FlatList
-        data={state.meals}
-        keyExtractor={(item) => item.idMeal}
+        data={state.recipes}
+        keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         renderItem={({ item }) => {
-          const meta = metaById[item.idMeal];
-          const subtitle = areaLabel ? areaLabel : meta?.area ? meta.area : 'Global';
+          const subtitle = scopeLabel
+            ? scopeLabel
+            : item.country
+              ? item.country
+              : item.cuisine
+                ? item.cuisine
+                : 'Global';
           return (
             <RecipeCard
-              meal={item}
+              title={item.title}
+              imageUrl={item.imageUrl}
               subtitle={subtitle}
-              description={meta?.description}
-              onPress={() => router.push(`/recipes/${encodeURIComponent(item.idMeal)}`)}
+              description={item.description}
+              onPress={() => router.push(`/recipes/${encodeURIComponent(item.id)}`)}
             />
           );
         }}
@@ -113,17 +99,22 @@ export default function RecipeListScreen() {
             <Text style={styles.headerHint}>
               Tap a recipe for ingredients and step-by-step instructions.
             </Text>
+            {scopeLabel ? (
+              <Text style={styles.headerHint}>
+                Showing desserts from multiple sources when available.
+              </Text>
+            ) : null}
           </View>
         }
         ListEmptyComponent={
           <View style={styles.empty}>
             <Text style={styles.muted}>No recipes found.</Text>
-            {areaLabel ? (
+            {scopeLabel ? (
               <Text style={styles.headerHint}>
-                TheMealDB may not have desserts listed for this cuisine. Try browsing all desserts instead.
+                Some sources have limited coverage for this country/cuisine. Try browsing all desserts instead.
               </Text>
             ) : null}
-            {areaLabel ? (
+            {scopeLabel ? (
               <Pressable onPress={() => router.push('/recipes')} style={styles.primaryButton}>
                 <Text style={styles.primaryButtonText}>Browse all desserts</Text>
               </Pressable>

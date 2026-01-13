@@ -1,37 +1,37 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
-import { fetchMealDetail, parseIngredients } from '../../src/services/api';
+import { fetchDessertDetail } from '../../src/services/recipes';
 import { LoadingSpinner } from '../../src/components/LoadingSpinner';
 import { Colors } from '../../src/theme/colors';
-import type { MealDetail } from '../../src/types/meals';
+import type { RecipeDetail } from '../../src/types/recipes';
 
 type LoadState =
   | { status: 'loading' }
   | { status: 'error'; message: string }
-  | { status: 'ready'; meal: MealDetail };
+  | { status: 'ready'; recipe: RecipeDetail };
 
 export default function RecipeDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const mealId = typeof id === 'string' ? id : '';
+  const recipeId = typeof id === 'string' ? id : '';
   const [state, setState] = useState<LoadState>({ status: 'loading' });
 
   useEffect(() => {
     let cancelled = false;
     setState({ status: 'loading' });
     (async () => {
-      const res = await fetchMealDetail(mealId);
+      const res = await fetchDessertDetail(recipeId);
       if (cancelled) return;
       if (!res.ok) setState({ status: 'error', message: res.error });
-      else setState({ status: 'ready', meal: res.data });
+      else setState({ status: 'ready', recipe: res.data });
     })();
     return () => {
       cancelled = true;
     };
-  }, [mealId]);
+  }, [recipeId]);
 
   const title = useMemo(() => {
-    if (state.status === 'ready') return state.meal.strMeal;
+    if (state.status === 'ready') return state.recipe.title;
     return 'Recipe';
   }, [state]);
 
@@ -47,39 +47,39 @@ export default function RecipeDetailScreen() {
     );
   }
 
-  const meal = state.meal;
-  const ingredients = parseIngredients(meal);
+  const recipe = state.recipe;
 
   return (
     <>
       <Stack.Screen options={{ title }} />
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-        {meal.strMealThumb ? (
-          <Image source={{ uri: meal.strMealThumb }} style={styles.image} />
+        {recipe.imageUrl ? (
+          <Image source={{ uri: recipe.imageUrl }} style={styles.image} />
         ) : (
           <View style={[styles.image, styles.imageFallback]} />
         )}
 
         <View style={styles.card}>
-          <Text style={styles.title}>{meal.strMeal}</Text>
+          <Text style={styles.title}>{recipe.title}</Text>
           <View style={styles.badgesRow}>
-            {!!meal.strArea && <Badge label={meal.strArea} />}
-            {!!meal.strCategory && <Badge label={meal.strCategory} variant="secondary" />}
+            {!!recipe.country && <Badge label={recipe.country} />}
+            {!!recipe.cuisine && <Badge label={recipe.cuisine} variant="secondary" />}
+            <Badge
+              label={recipe.provider === 'mealdb' ? 'TheMealDB' : recipe.provider === 'dummyjson' ? 'DummyJSON' : 'Curated'}
+              variant="secondary"
+            />
           </View>
         </View>
 
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Ingredients</Text>
-          {ingredients.length === 0 ? (
+          {recipe.ingredients.length === 0 ? (
             <Text style={styles.muted}>No ingredient list provided.</Text>
           ) : (
-            ingredients.map((line, idx) => (
-              <View key={`${line.ingredient}-${idx}`} style={styles.ingredientRow}>
+            recipe.ingredients.map((line, idx) => (
+              <View key={`${line}-${idx}`} style={styles.ingredientRow}>
                 <Text style={styles.ingredientBullet}>•</Text>
-                <Text style={styles.ingredientText}>
-                  {line.measure ? `${line.measure} ` : ''}
-                  {line.ingredient}
-                </Text>
+                <Text style={styles.ingredientText}>{line}</Text>
               </View>
             ))
           )}
@@ -87,9 +87,7 @@ export default function RecipeDetailScreen() {
 
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Instructions</Text>
-          <Text style={styles.instructions}>
-            {(meal.strInstructions ?? '').trim() || 'No instructions provided.'}
-          </Text>
+          <Text style={styles.instructions}>{recipe.instructions.trim() || 'No instructions provided.'}</Text>
         </View>
       </ScrollView>
     </>
