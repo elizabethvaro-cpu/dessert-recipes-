@@ -1,0 +1,190 @@
+1. App Overview
+
+Build a native mobile application using Expo (React Native) that allows users to discover dessert recipes from around the world.
+The app should fetch recipes from a public open recipe API, focusing on desserts by country or cuisine.
+
+The app must work on:
+
+📱 iOS
+
+🤖 Android
+
+🌐 Web (Expo Web, deployable on Vercel)
+
+2. Functional Requirements
+
+Use Expo (managed workflow)
+
+Use React Native with TypeScript
+
+Fetch data from a free, open recipe API
+
+Support global dessert cuisines
+
+Must be mobile-first
+
+Must be Vercel-ready
+
+No authentication required
+
+Handle loading and error states gracefully
+
+3. Core Features
+🍰 Recipe Discovery
+
+Fetch dessert recipes from different countries
+
+Display:
+
+Recipe name
+
+Image
+
+Country / cuisine
+
+Short description (if available)
+
+🔍 Filtering & Navigation
+
+Filter desserts by:
+
+Country / cuisine
+
+Scrollable recipe list
+
+Tap a recipe to view full details
+
+📖 Recipe Detail Screen
+
+Ingredients list
+
+Cooking instructions
+
+Image preview
+
+Country of origin
+
+⚡ UX Enhancements
+
+Loading indicators
+
+Empty states
+
+Error handling
+
+Smooth navigation transitions
+
+4. API Integration
+
+Use TheMealDB (free & open):
+
+Base URL:
+https://www.themealdb.com/api/json/v1/1/
+
+Example Endpoints:
+
+Desserts by category:
+/filter.php?c=Dessert
+
+Lookup recipe details:
+/lookup.php?i={mealId}
+
+Filter by area (country):
+/filter.php?a={Area}
+
+API Requirements:
+
+Centralized API service file
+
+Typed responses (TypeScript)
+
+Async/await pattern
+
+Graceful failure handling
+
+5. App Architecture
+
+app/ or src/ directory structure
+
+Screens:
+
+HomeScreen
+
+RecipeListScreen
+
+RecipeDetailScreen
+
+Components:
+
+RecipeCard
+
+LoadingSpinner
+
+Services:
+
+api.ts (recipe API)
+
+Navigation:
+
+expo-router or @react-navigation/native
+
+6. Styling & UI
+
+Use StyleSheet API or NativeWind
+
+Clean, modern, food-focused UI
+
+Warm dessert-themed colors (cream, chocolate, pastel tones)
+
+Responsive layouts
+
+Consistent spacing and typography
+
+7. Deployment Readiness
+
+Ensure the app is:
+
+Compatible with Expo Web
+
+Configured for Vercel deployment
+
+Includes:
+
+app.json
+
+Web output support
+
+No native dependencies that break web builds
+
+8. Output Expectations
+The final output should include:
+
+Fully working Expo app code
+
+TypeScript usage throughout
+
+Clear folder structure
+
+Comments explaining key logic
+
+API service abstraction
+
+Instructions to:
+
+Run locally with Expo
+
+Build for web
+
+Deploy to Vercel
+
+9. Development Instructions
+
+Use best practices
+
+Avoid unnecessary dependencies
+
+Prefer clarity over cleverness
+
+Generate complete, runnable files
+
+Assume this will be cloned and run immediately
