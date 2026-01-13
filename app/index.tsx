@@ -4,6 +4,7 @@ import { Stack, useRouter } from 'expo-router';
 import { fetchAreas } from '../src/services/api';
 import { LoadingSpinner } from '../src/components/LoadingSpinner';
 import { Colors } from '../src/theme/colors';
+import { flagForArea } from '../src/utils/flags';
 
 type LoadState =
   | { status: 'loading' }
@@ -76,8 +77,16 @@ export default function HomeScreen() {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.areasRow}
         renderItem={({ item }) => (
-          <Pressable onPress={() => router.push(`/recipes?area=${encodeURIComponent(item)}`)} style={styles.areaChip}>
-            <Text style={styles.areaChipText}>{item}</Text>
+          <Pressable
+            onPress={() => router.push(`/recipes?area=${encodeURIComponent(item)}`)}
+            style={({ pressed }) => [styles.areaTile, pressed && styles.areaTilePressed]}
+          >
+            <Text style={styles.areaName} numberOfLines={1}>
+              {item}
+            </Text>
+            <Text style={styles.areaFlag} accessibilityLabel={`${item} flag`}>
+              {flagForArea(item)}
+            </Text>
           </Pressable>
         )}
         ListEmptyComponent={
@@ -146,19 +155,30 @@ const styles = StyleSheet.create({
   areasRow: {
     paddingBottom: 8,
   },
-  areaChip: {
+  areaTile: {
+    width: 120,
     backgroundColor: '#FFFFFF',
     borderColor: Colors.border,
     borderWidth: 1,
     paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 999,
+    paddingVertical: 12,
+    borderRadius: 16,
     marginRight: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  areaChipText: {
+  areaTilePressed: {
+    opacity: 0.88,
+  },
+  areaName: {
     color: Colors.text,
     fontWeight: '700',
     fontSize: 13,
+    textAlign: 'center',
+  },
+  areaFlag: {
+    marginTop: 8,
+    fontSize: 22,
   },
   center: {
     flex: 1,
