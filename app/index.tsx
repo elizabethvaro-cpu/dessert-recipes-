@@ -67,7 +67,9 @@ export default function HomeScreen() {
 
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Browse by country / cuisine</Text>
-        <Text style={styles.sectionHint}>Powered by TheMealDB</Text>
+        <Pressable onPress={() => router.push('/countries')} style={styles.linkButton}>
+          <Text style={styles.linkButtonText}>Explore more</Text>
+        </Pressable>
       </View>
 
       <FlatList
@@ -151,6 +153,16 @@ const styles = StyleSheet.create({
   sectionHint: {
     fontSize: 12,
     color: Colors.mutedText,
+  },
+  linkButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    borderRadius: 10,
+  },
+  linkButtonText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: Colors.berry,
   },
   areasRow: {
     paddingBottom: 8,

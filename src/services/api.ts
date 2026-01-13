@@ -112,3 +112,12 @@ export async function fetchDessertsByArea(area: string): Promise<ApiResult<MealS
   return { ok: true, data: out };
 }
 
+// All recipes for a country/cuisine (area). This is useful when a country has no desserts
+// listed but does have many recipes (e.g. Mexico).
+export async function fetchMealsByArea(area: string): Promise<ApiResult<MealSummary[]>> {
+  const areaEncoded = normalizeArea(area);
+  const areaResult = await safeFetchJson<MealsFilterResponse>(`/filter.php?a=${areaEncoded}`);
+  if (!areaResult.ok) return areaResult;
+  return { ok: true, data: areaResult.data.meals ?? [] };
+}
+
