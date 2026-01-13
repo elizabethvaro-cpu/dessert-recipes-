@@ -68,7 +68,7 @@ export default function HomeScreen() {
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Browse by country / cuisine</Text>
         <Pressable onPress={() => router.push('/countries')} style={styles.linkButton}>
-          <Text style={styles.linkButtonText}>Explore more</Text>
+          <Text style={styles.linkButtonText}>Search cuisines</Text>
         </Pressable>
       </View>
 
